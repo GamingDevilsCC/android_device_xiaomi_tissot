@@ -14,10 +14,15 @@
 # limitations under the License.
 #
 
-$(call inherit-product, device/xiaomi/tissot/full_tissot.mk)
+# Inherit from those products. Most specific first.
+$(call inherit-product, $(SRC_TARGET_DIR)/product/core_64_bit.mk)
+$(call inherit-product, $(SRC_TARGET_DIR)/product/aosp_base_telephony.mk)
 
-# Inherit some common LineageOS stuff.
-$(call inherit-product, vendor/lineage/config/common_full_phone.mk)
+# Inherit from tissot device.
+$(call inherit-product, device/xiaomi/tissot/device.mk)
+
+# Inherit from Omni custom product configuration.
+$(call inherit-product, vendor/omni/config/common.mk)
 
 # A/B updater
 AB_OTA_UPDATER := true
@@ -52,7 +57,13 @@ PRODUCT_STATIC_BOOT_CONTROL_HAL := \
     libgptutils \
     libz
 
-PRODUCT_NAME := lineage_tissot
+# Device identifier. This must come after all inclusions
+TARGET_VENDOR := Xiaomi
+PRODUCT_DEVICE := tissot
+PRODUCT_NAME := omni_tissot
+PRODUCT_BRAND := Xiaomi
+PRODUCT_MODEL := Mi A1
+PRODUCT_MANUFACTURER := Xiaomi
 BOARD_VENDOR := Xiaomi
 
 PRODUCT_GMS_CLIENTID_BASE := android-xiaomi
