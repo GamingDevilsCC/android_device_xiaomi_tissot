@@ -1,0 +1,2 @@
+type fingerprint_device, dev_type;
+type peel_ir_device, dev_type;
