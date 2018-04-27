@@ -400,6 +400,7 @@ service iop /system/vendor/bin/iop
     group root
     disabled
     socket iop seqpacket 0666 root system
+    writepid /dev/cpuset/system-background/tasks
 
 service ssr_setup /system/vendor/bin/ssr_setup
     oneshot
@@ -460,11 +461,13 @@ service cnd /system/vendor/bin/cnd
     class main
     user system
     group system wifi inet radio wakelock net_admin
+    writepid /dev/cpuset/system-background/tasks
 
 service dpmQmiMgr /system/vendor/bin/dpmQmiMgr
     class main
     user system
     group system
+    writepid /dev/cpuset/system-background/tasks
 
 service irsc_util /vendor/bin/irsc_util "/vendor/etc/sec_config"
     class core
@@ -476,10 +479,12 @@ service rmt_storage /vendor/bin/rmt_storage
     user root
     shutdown critical
     ioprio rt 0
+    writepid /dev/cpuset/system-background/tasks
 
 service tftp_server /vendor/bin/tftp_server
    class core
    user root
+   writepid /dev/cpuset/system-background/tasks
 
 on property:wc_transport.start_hci=true
     start start_hci_filter
@@ -503,26 +508,26 @@ service port-bridge /system/vendor/bin/port-bridge
 
 service netmgrd /system/vendor/bin/netmgrd
     class main
-    disabled
+    writepid /dev/cpuset/system-background/tasks
 
 service ipacm-diag /system/vendor/bin/ipacm-diag
     class main
     user radio
     socket ipacm_log_file dgram 660 radio radio
     group radio diag oem_2901
-    disabled
+    writepid /dev/cpuset/system-background/tasks
 
 service qti /system/vendor/bin/qti
     class main
     user radio
     group radio oem_2901 diag usb net_admin
-    disabled
+    writepid /dev/cpuset/system-background/tasks
 
 service sensors /vendor/bin/sensors.qcom
     class core
     user root
     group root
-    disabled
+    writepid /dev/cpuset/system-background/tasks
 
 on property:ro.use_data_netmgrd=false
     # netmgr not supported on specific target
@@ -571,6 +576,7 @@ service loc_launcher /system/vendor/bin/loc_launcher
     #loc_launcher will start as root and set its uid to gps
     class late_start
     group gps inet diag wifi
+    writepid /dev/cpuset/system-background/tasks
 
 service qcom-sh /vendor/bin/init.qcom.sh
     class late_start
@@ -666,27 +672,6 @@ on property:init.svc.surfaceflinger=restarting
     stop hwcomposer-2-1
     start hwcomposer-2-1
 
-service goodixfpd vendor/bin/hw/android.hardware.biometrics.fingerprint@2.1-service
-      class core
-      user root
-      group system system
-      writepid /dev/cpuset/system-background/tasks
- 
- on property:sys.fp.vendor=switchf
-     stop goodixfpd
-     setprop sys.fp.vendor searchf
-     setprop fpc.fp.miui.token 0
-     setprop ro.boot.fpsensor fpc
-     setprop ro.hardware.fingerprint searchf
-     start fps_hal
- 
- on property:sys.fp.onstart=1
-    setprop goodix.fp.miui.analyse 1
-    setprop goodix.fp.miui.token 0
-    setprop ro.boot.fpsensor gdx
-    setprop ro.hardware.fingerprint goodix
-    start fps_hal
-
 service time_daemon /system/vendor/bin/time_daemon
     class main
     user root
@@ -697,3 +682,38 @@ service goodix_script /vendor/bin/init.goodix.sh
     class late_start
     user root
     oneshot
+
+on property:vold.decrypt=trigger_restart_framework
+     start config_bt_addr
+     start config_bluetooth
+     
+service config_bt_addr /system/vendor/bin/btnvtool -O
+    class core
+    user bluetooth
+    group bluetooth radio
+    oneshot
+
+on boot
+
+    # add for goodix
+    chown system system /dev/goodix_fp
+    chmod 0644 /dev/goodix_fp
+    
+    # add for fpc
+    chown system system /sys/devices/soc/soc:fpc1020/compatible_all
+    chmod 0664 /sys/devices/soc/soc:fpc1020/compatible_all
+    chown system system /sys/devices/soc/soc:fpc1020/irq
+    chmod 0660 /sys/devices/soc/soc:fpc1020/irq
+    chown system system /sys/devices/soc/soc:fpc1020/hw_reset
+    chmod 0660 /sys/devices/soc/soc:fpc1020/hw_reset
+    chown system system /sys/devices/soc/soc:fpc1020/wakeup_enable
+    chmod 0660 /sys/devices/soc/soc:fpc1020/wakeup_enable
+    chown system system /sys/devices/soc/soc:fpc1020/fingerdown_wait
+    chmod 0660 /sys/devices/soc/soc:fpc1020/fingerdown_wait
+
+on property:sys.fp.vendor=goodix
+   setprop ro.boot.fpsensor goodix
+   setprop persist.sys.fp.vendor goodix
+
+on property:sys.fp.vendor=FPC
+   setprop ro.boot.fpsensor fpc
