@@ -15,7 +15,12 @@
 # limitations under the License.
 #
 
-$(call inherit-product, device/xiaomi/tissot/full_tissot.mk)
+# Inherit from those products. Most specific first.
+$(call inherit-product, $(SRC_TARGET_DIR)/product/core_64_bit.mk)
+$(call inherit-product, $(SRC_TARGET_DIR)/product/full_base_telephony.mk)
+
+# Inherit from tissot device
+$(call inherit-product, device/xiaomi/tissot/device.mk)
 
 # Inherit some common Liquid Remix stuff.
 $(call inherit-product, vendor/liquid/config/common_full_phone.mk)
@@ -53,6 +58,8 @@ PRODUCT_STATIC_BOOT_CONTROL_HAL := \
     libgptutils \
     libz
 
+# Device identifier. This must come after all inclusions
+TARGET_VENDOR := Xiaomi
 PRODUCT_NAME := liquid_tissot
 BOARD_VENDOR := Xiaomi
 PRODUCT_DEVICE := tissot
