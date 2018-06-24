@@ -61,6 +61,8 @@ on early-boot
     write /sys/kernel/boot_slpi/boot 1
     exec u:r:qti_init_shell:s0 -- /vendor/bin/init.qcom.early_boot.sh
     chown root audio /sys/kernel/boot_adsp/boot
+    write /sys/devices/system/cpu/cpu0/cpufreq/scaling_max_freq 2016000
+    write /sys/class/kgsl/kgsl-3d0/max_gpuclk 650000000
 
 on boot
     chown bluetooth bluetooth /sys/module/bluetooth_power/parameters/power
@@ -491,7 +493,20 @@ on property:wc_transport.start_hci=true
 
 on property:wc_transport.start_hci=false
     stop start_hci_filter
+    
+service hciattach /vendor/bin/hci_qcomm_init -e
+    class late_start
+    user bluetooth
+    group bluetooth net_bt_admin
+    disabled
+    oneshot
 
+on property:bluetooth.hciattach=true
+    start hciattach
+
+on property:bluetooth.hciattach=false
+    setprop bluetooth.status off
+    
 service start_hci_filter /system/vendor/bin/wcnss_filter
     class late_start
     user bluetooth
